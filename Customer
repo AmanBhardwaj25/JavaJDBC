@@ -1,0 +1,68 @@
+//Aman Bhardwaj
+
+import java.io.*;
+import java.util.*;
+
+public class Customer implements Serializable
+{
+	private String name;
+	private Address address;
+	private String creditCardNumber;
+	private ArrayList<Rental> rentalList = new ArrayList<Rental>();
+	
+	public Customer()
+	{
+		setName("");
+		setAddress(new Address());
+		setCreditCardNumber("");
+	}
+	
+	public Customer(String n, Address a, String ccn)
+	{
+		setName(n);
+		setAddress(a);
+		setCreditCardNumber(ccn);
+	}
+	
+	public void setName(String n)
+	{
+		name = n;
+	}
+	
+	public void setAddress(Address a)
+	{
+		address = a;
+	}
+	
+	public void setCreditCardNumber(String ccn)
+	{
+		creditCardNumber = ccn;
+	}
+	
+	public String getName()
+	{
+		return name;
+	}
+	public Address getAddress()
+	{
+		return address;
+	}
+	public String getCreditCardNumber()
+	{
+		return creditCardNumber;
+	}	
+
+	public ArrayList<Rental> getRentalList()
+	{
+		return rentalList;
+	}
+	public void addRental(Rental r)
+	{
+		System.out.println("ADD");
+		rentalList.add(r);
+	}
+	public String toString()
+	{
+		return(" Name " + name + "Address " + address + "Credit Card Number " + creditCardNumber + "rental" + getRentalList());
+	}
+}

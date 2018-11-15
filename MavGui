@@ -1,0 +1,626 @@
+//Aman Bhardwaj
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.*;
+
+public class MavGUI extends JFrame
+{
+    private JDesktopPane theDesktop;
+    ArrayList<Customer> customerList = new ArrayList<Customer>();
+    ArrayList<Rental> rentalList = new ArrayList<Rental>();
+
+    Customer c = new Customer();
+    MavRental mr = new MavRental();
+
+    public MavGUI()
+    {
+        super("Mav Rental System");
+
+        readCustomers();
+        System.out.println(mr.getCustomerList());
+        //readRental();
+
+        theDesktop = new JDesktopPane();
+
+        JMenuBar bar = new JMenuBar();
+
+        JMenu addMenu = new JMenu("Add");
+
+        JMenuItem addCustomer = new JMenuItem("Add Customer");
+        JMenuItem addRental = new JMenuItem("Add Rental");
+
+        addMenu.add(addCustomer);
+        addMenu.add(addRental);
+
+        JMenu exitMenu = new JMenu("Exit");
+        JMenuItem calcItem = new JMenuItem("Calculate Charges");
+        JMenuItem writeDatabase = new JMenuItem("Write Database");
+        JMenuItem exitItem = new JMenuItem("Close");
+
+        //actionlistner instantiates and does everything all in one. notice the closing bracket
+        exitItem.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                writeCustomers();
+                System.exit(0);
+            }
+        });
+
+        calcItem.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                DatabaseMethods pm = new DatabaseMethods();
+                String message = "";
+                JOptionPane.showMessageDialog(null, mr.printInvoice());
+                pm.calculateCharge();
+            }
+
+        });
+
+        writeDatabase.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                DatabaseMethods wc = new DatabaseMethods();
+                wc.writeCustomerToDatabase();
+                wc.writeRentalToDatabase();
+            }
+        });
+
+        addCustomer.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                JInternalFrame frame = new JInternalFrame("Add Customer",
+                        true, true, true, true);
+                CustomerPanel cp = new CustomerPanel();
+                frame.add(cp);
+                frame.pack();
+                theDesktop.add(frame);
+                frame.setVisible(true);
+
+            }
+        });
+        addRental.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				JInternalFrame frame = new JInternalFrame("Add Rental", true, true, true, true);//min, max, reset, close
+				RentalPanel rp = new RentalPanel();
+				frame.add(rp);
+				frame.pack();
+				theDesktop.add(frame);
+				frame.setVisible(true);
+			}
+
+		});
+
+        exitMenu.add(calcItem);
+        exitMenu.add(writeDatabase);
+        exitMenu.add(exitItem);
+
+        bar.add(addMenu);
+        bar.add(exitMenu);
+
+        add(theDesktop);
+
+        setJMenuBar(bar);
+    }
+
+    public void readCustomers()
+    {
+        Scanner input;
+        String line;
+        String array[];
+        try
+        {
+            input = new Scanner(new File("customers.txt"));
+
+            while(input.hasNext())
+            {
+                line = input.nextLine();
+                array = line.split(",");
+               // System.out.println(line);
+
+                if(!mr.customerExists(array[0]))
+				{
+					
+                    mr.addCustomer(new Customer(array[0],new Address(array[1],array[2],array[3],array[4]),array[5]));
+                        System.out.println("inside");
+					
+					for(Customer c: mr.getCustomerList())
+					{
+						
+						if(c.getName().equals(array[0]))
+						{
+							
+							if (array[6].equals("Furniture"))	
+							{
+								c.addRental(new FurnitureRental(FurnitureRental.FurnitureType.valueOf(array[7]), Double.parseDouble(array[8]), Integer.parseInt(array[9])));
+							}
+							else
+							{
+								c.addRental(new ElectronicRental(ElectronicRental.ElectronicType.valueOf(array[7]), Double.parseDouble(array[8]), Integer.parseInt(array[9])));
+							}
+						}
+					}
+				}
+
+				else
+				{
+					
+				
+					for(Customer c: mr.getCustomerList())
+					{
+						if(c.getName().equals(array[0]))
+						{
+						
+                            if (array[6].equals("Furniture"))	
+                            {
+                                c.addRental(new FurnitureRental(FurnitureRental.FurnitureType.valueOf(array[7]), Double.parseDouble(array[8]), Integer.parseInt(array[9])));
+                            }
+                            else
+                            {
+                                c.addRental(new ElectronicRental(ElectronicRental.ElectronicType.valueOf(array[7]), Double.parseDouble(array[8]), Integer.parseInt(array[9])));
+                            }	
+                        }
+					}
+				
+				}
+            }
+        }
+        catch(IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+
+    }
+
+    public void writeCustomers()
+    {
+        ObjectOutputStream output;
+
+        try
+        {
+            output = new ObjectOutputStream(new FileOutputStream("customers.ser"));
+            System.out.println(mr.getCustomerList());
+            for (Customer c: mr.getCustomerList())
+            {
+                output.writeObject(c);
+            }
+
+            output.close();
+        }
+
+        catch(IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+    }
+
+
+    public static void main(String args[])
+    {
+        MavGUI c = new MavGUI();
+        c.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        c.setLocationRelativeTo(null);
+        c.setSize(500,500);
+        c.setVisible(true);
+
+    }
+
+    class CustomerPanel extends JPanel
+    {
+        private JLabel nameLabel;
+        private JLabel streetLabel;
+        private JLabel cityLabel;
+        private JLabel stateLabel;
+        private JLabel zipLabel;
+        private JLabel creditcardnumberLabel;
+        private JLabel clickwhendoneLabel;
+
+        private JTextField nameField;
+        private JTextField streetField;
+        private JTextField cityField;
+        private JTextField stateField;
+        private JTextField zipField;
+        private JTextField creditcardnumberField;
+        private JButton clickwhendone;
+
+        public CustomerPanel()
+        {
+            setLayout(new GridLayout(7,2));
+            nameLabel = new JLabel(" Enter name");
+            streetLabel = new JLabel(" Enter street");
+            cityLabel = new JLabel(" Enter City");
+            stateLabel = new JLabel(" Enter State");
+            zipLabel = new JLabel(" Enter zip");
+            creditcardnumberLabel = new JLabel(" Enter credit card number");
+            clickwhendoneLabel = new JLabel(" Click When Done");
+
+            nameField = new JTextField(20);
+            streetField = new JTextField(20);
+            cityField = new JTextField(20);
+            stateField = new JTextField(20);
+            zipField = new JTextField(20);
+            creditcardnumberField = new JTextField(20);
+            clickwhendone = new JButton("Submit");
+
+            MyListener handler = new MyListener();
+            clickwhendone.addActionListener(handler);
+
+            add(nameLabel);
+            add(nameField);
+            add(streetLabel);
+            add(streetField);
+            add(cityLabel);
+            add(cityField);
+            add(stateLabel);
+            add(stateField);
+            add(zipLabel);
+            add(zipField);
+            add(creditcardnumberLabel);
+            add(creditcardnumberField);
+            add(clickwhendoneLabel);
+            add(clickwhendone);
+        }
+        //listener is unfinished 12:52 am
+        class MyListener implements ActionListener
+        {
+            
+
+            public void actionPerformed(ActionEvent e)
+            {
+                DatabaseMethods a = new DatabaseMethods();
+                
+
+                if (validCustomerInput())
+                {
+                    System.out.println("true");
+
+                if(mr.customerExists(nameField.getText()))
+				{
+				JOptionPane.showMessageDialog(null, "customer exists");
+				}
+				else
+				{
+                String name = nameField.getText();
+                String street = streetField.getText();
+                String city = cityField.getText();
+                String state = stateField.getText();
+                String zip = zipField.getText();
+                String creditcardnumber = creditcardnumberField.getText();
+                    a.writeCustomerTable(name, street, city, state, zip, creditcardnumber);
+                    mr.addCustomer( new Customer(nameField.getText(), new Address(streetField.getText(), cityField.getText(), stateField.getText(), zipField.getText()), creditcardnumberField.getText()) );
+                    
+                    
+				}
+                System.out.println(nameField.getText() + " " + creditcardnumberField.getText());
+
+                nameField.setText("");
+                streetField.setText("");
+				cityField.setText("");
+				stateField.setText("");
+				zipField.setText("");
+                creditcardnumberField.setText("");
+
+                nameField.requestFocus();
+                System.out.println(mr.getCustomerList());
+                }
+
+            }
+
+            public boolean validCustomerInput()
+                {
+                    boolean validData = true;
+                    if (nameField.getText().isEmpty())
+                    {
+                        JOptionPane.showMessageDialog(null, "enter name");
+                        nameField.requestFocus();
+                        validData = false;
+                    }
+                    if (streetField.getText().isEmpty())
+                    {
+                        JOptionPane.showMessageDialog(null, "enter street");
+                        nameField.requestFocus();
+                        validData = false;
+                    }
+
+                    if (cityField.getText().isEmpty())
+                    {
+                        JOptionPane.showMessageDialog(null, "enter city");
+                        nameField.requestFocus();
+                        validData = false;
+                    }
+
+                    if (stateField.getText().isEmpty())
+                    {
+                        JOptionPane.showMessageDialog(null, "enter state");
+                        nameField.requestFocus();
+                        validData = false;
+                    }
+
+                    if (zipField.getText().isEmpty())
+                    {
+                        JOptionPane.showMessageDialog(null, "enter zip");
+                        nameField.requestFocus();
+                        validData = false;
+                    }
+
+                    if (creditcardnumberField.getText().isEmpty())
+                    {
+                        JOptionPane.showMessageDialog(null, "enter credit card number");
+                        nameField.requestFocus();
+                        validData = false;
+                    }
+
+                    if (!zipField.getText().isEmpty())
+                    {
+                        //if(!zipField.getText().matches("[1-9][0-9]{4}"))
+                        if(!zipField.getText().matches("abc|def"))
+                        {
+                        JOptionPane.showMessageDialog(null, "invalid zip code");
+                        zipField.requestFocus();
+                        validData = false;   }
+                        
+                    }
+//credit card regex is incomplete 1 am 15th october
+                    if (!creditcardnumberField.getText().isEmpty())
+                    {
+                        if(!creditcardnumberField.getText().matches("[456][0-9]{3}-[0-9]{4}-[0-9]{4}-[0-9]{4}"))
+                        {
+                            JOptionPane.showMessageDialog(null, "invalid credit card information. Please note that accepted credit cards are limited to Visa, MasterCard and Discover");
+                            creditcardnumberField.requestFocus();
+                            validData = false;
+                        }
+                    }
+
+                    return validData;
+                }
+        }
+    }
+
+    class RentalPanel extends JPanel
+    {
+		
+		
+            private JLabel customerNameLabel;
+            private JLabel numOfDaysLabel;
+            private JLabel pricePerDayLabel;
+            private JLabel buttonLabel;
+
+
+            private JTextField customerNameField;
+            private JComboBox<String> typeBox;
+            private JTextField numOfDaysField;
+            private JTextField pricePerDayField;
+            private JButton submitButton;
+            
+            private JCheckBox furnitureBox;
+            private JCheckBox electronicBox;
+            
+            private JComboBox<String> ftypeBox;
+            String ftypes[] = {"SELECT ONE","BED","COUCH","CHAIR"};
+            private JComboBox<String> etypeBox;
+            String etypes[] = {"SELECT ONE","COMPUTER","TV"};
+
+            ButtonGroup group;
+
+		public RentalPanel()
+		{
+			setLayout(new GridLayout(6,2));
+		
+			customerNameLabel = new JLabel(" Enter customer name");
+			numOfDaysLabel = new JLabel(" Enter number of days");
+			pricePerDayLabel = new JLabel(" Enter price per day");
+			buttonLabel = new JLabel(" Click When Done");
+
+			customerNameField = new JTextField(20);
+			numOfDaysField = new JTextField(20);
+			pricePerDayField = new JTextField(20);
+			submitButton = new JButton("SUBMIT");
+
+			group = new ButtonGroup();
+			furnitureBox = new JCheckBox("Furniture");
+			electronicBox = new JCheckBox("Electronic");
+			
+			group.add(furnitureBox);
+			group.add(electronicBox);
+
+			ftypeBox = new JComboBox<String>(ftypes);
+			etypeBox = new JComboBox<String>(etypes);
+
+			furnitureBox.addActionListener(new ActionListener ()
+			{
+				public void actionPerformed(ActionEvent e)
+				{	
+					ftypeBox.setEnabled(true);
+					etypeBox.setEnabled(false);
+				}
+	
+			});
+			electronicBox.addActionListener(new ActionListener()
+			{	
+				public void actionPerformed(ActionEvent e)
+				{	
+					ftypeBox.setEnabled(false);
+					etypeBox.setEnabled(true);
+				}
+			});
+
+
+		
+			MyListener handler = new MyListener();
+			submitButton.addActionListener(handler);	
+		
+			
+			add(customerNameLabel);
+			add(customerNameField);
+			add(furnitureBox);
+			add(electronicBox);
+			add(numOfDaysLabel);
+			add(numOfDaysField);
+			add(pricePerDayLabel);
+			add(pricePerDayField);
+			add(ftypeBox);
+			add(etypeBox);
+			add(buttonLabel);
+			add(submitButton);
+		}
+
+
+		class MyListener implements ActionListener
+		{
+            public boolean validRentalInput()
+            {
+                boolean validDataR = true;
+                if (customerNameField.getText().isEmpty())
+                {
+                        JOptionPane.showMessageDialog(null, "enter customer name");
+                        customerNameField.requestFocus();
+                        validDataR = false;
+                }
+                if (numOfDaysField.getText().isEmpty())
+                {
+                        JOptionPane.showMessageDialog(null, "enter number of days");
+                        numOfDaysField.requestFocus();
+                        validDataR = false;
+                }
+
+                if (pricePerDayField.getText().isEmpty())
+                {
+                        JOptionPane.showMessageDialog(null, "enter price");
+                        pricePerDayField.requestFocus();
+                        validDataR = false;
+                }
+                if (!pricePerDayField.getText().isEmpty())
+                {
+                    if(!pricePerDayField.getText().matches("[0-9]+([.][0-9][1-9])?"))
+                    {
+                        JOptionPane.showMessageDialog(null, "enter price");
+                        pricePerDayField.requestFocus();
+                        validDataR = false;
+                    }
+                }
+
+                if (!furnitureBox.isSelected() & !electronicBox.isSelected())
+                {
+                    JOptionPane.showMessageDialog(null, "Please select either Furniture or Electronic");
+                    validDataR = false;
+                }
+                
+                if(!numOfDaysField.getText().isEmpty())
+                {
+                    if(!numOfDaysField.getText().matches("[0-9]{1,}"))
+                        {
+                            JOptionPane.showMessageDialog(null, "invalid input for number of days");
+                            numOfDaysField.requestFocus();
+                            validDataR = false;
+                        }
+                }
+                //Why does joption show invalid input for number of days and price per day if furniture type is not selected
+
+                if(!pricePerDayField.getText().isEmpty())
+                {
+                    if(!pricePerDayField.getText().matches("[0-9]+([.][0-9]{1,2})?"))
+                        {
+                            JOptionPane.showMessageDialog(null, "invalid input for price per day");
+                            pricePerDayField.requestFocus();
+                            validDataR = false;
+                        }
+                }
+
+                if(furnitureBox.isSelected() & ftypes[ftypeBox.getSelectedIndex()].equals("SELECT ONE"))
+                {
+                    JOptionPane.showMessageDialog(null, "Please select furniture type");
+                    validDataR = false;
+                }
+
+                if(electronicBox.isSelected() & etypes[etypeBox.getSelectedIndex()].equals("SELECT ONE"))
+                {
+                    JOptionPane.showMessageDialog(null, "Please select furniture type");
+                    validDataR = false;
+                }
+
+                return validDataR;
+
+            }
+			public void actionPerformed(ActionEvent e)
+			{
+				System.out.println(customerNameField.getText() + " " + numOfDaysField.getText() + " " + pricePerDayField.getText() + " " );
+			
+
+                    //add a loop here like you did in customer
+
+                DatabaseMethods a = new DatabaseMethods();
+
+                if(validRentalInput())
+                {
+
+				if(mr.customerExists(customerNameField.getText()))
+                {
+                        //System.out.println("EXISTS");
+
+                    for(Customer c : mr.getCustomerList())
+                    {
+                        
+                        if(c.getName().equalsIgnoreCase(customerNameField.getText()))
+                       {
+                           String name = customerNameField.getText();
+                           int numberofdays = Integer.parseInt(numOfDaysField.getText());
+                           double priceperday = Double.parseDouble(pricePerDayField.getText());
+                           
+
+                        
+                            if(furnitureBox.isSelected())
+                            {
+                                
+                                String rentalType = "Furniture";
+                                String enumType = ftypes[ftypeBox.getSelectedIndex()];
+                                System.out.println(furnitureBox.getText());
+                                System.out.println(ftypes[ftypeBox.getSelectedIndex()]);
+                                a.writeRentalTable(name, numberofdays, priceperday, rentalType, enumType);
+                                c.addRental(new FurnitureRental(FurnitureRental.FurnitureType.valueOf(ftypes[ftypeBox.getSelectedIndex()] ),Double.parseDouble(pricePerDayField.getText()) ,Integer.parseInt(numOfDaysField.getText()) ));
+                                
+                            }
+                            else 
+                            {
+                                String rentalType = "Electronic";
+                                String enumType = etypes[etypeBox.getSelectedIndex()];
+                                System.out.println(electronicBox.getText());
+                                System.out.println(etypes[etypeBox.getSelectedIndex()]);
+                                a.writeRentalTable(name, numberofdays, priceperday, rentalType, enumType);
+                                c.addRental(new ElectronicRental(ElectronicRental.ElectronicType.valueOf(etypes[etypeBox.getSelectedIndex()]), Double.parseDouble(pricePerDayField.getText()) ,Integer.parseInt(numOfDaysField.getText()) ));
+                                
+                            }
+                        
+                        }
+                    }
+
+                System.out.println(mr.getCustomerList());
+                }
+            
+                else
+                {    
+					//for(Customer c: mr.getCustomerList())
+
+   					JOptionPane.showMessageDialog(null, "customer does not exist");
+                
+                }
+                
+                customerNameField.setText("");
+                numOfDaysField.setText("");
+                pricePerDayField.setText("");
+                group.clearSelection();
+                ftypeBox.setSelectedIndex(0);
+                etypeBox.setSelectedIndex(0);
+                customerNameField.requestFocus();
+            }
+        }
+        }
+    }
+}

@@ -1,0 +1,328 @@
+//Aman Bhardwaj
+import java.sql.*;
+
+import javax.swing.*;
+import java.awt.*;
+
+import java.io.*;
+import java.util.*;
+
+public class DatabaseMethods
+{
+    final String DATABASE_URL = "jdbc:derby:rental";
+    final String DATABASE_NAME = "MavRental";
+    
+    Connection connection = null;
+    PreparedStatement insertCustomer;
+    PreparedStatement insertRental;
+    PreparedStatement displayCustomers = null;
+    PreparedStatement displayRentals = null;
+    PreparedStatement calculateChargeFurniture = null;
+    PreparedStatement calculateChargeElectronicComputer = null;
+    PreparedStatement calculateChargeElectronic = null;
+    Statement statement = null;
+    ResultSet resultSet;
+    ResultSetMetaData metaData;
+    int numberOfColumns;
+    int res;
+
+        public void connectToDatabase()
+        {
+
+            try
+            {
+                connection = DriverManager.getConnection(DATABASE_URL, "davis","davis");
+                //ask how to calculate charge
+                insertCustomer = connection.prepareStatement("INSERT INTO Customer (Name, Street, City, State, Zip, CreditCardNumber) VALUES(?,?,?,?,?,?)");
+                insertRental = connection.prepareStatement("INSERT INTO Rental (Name, RentalType, EnumType, Rate, Days) VALUES(?,?,?,?,?)");
+                displayCustomers = connection.prepareStatement("SELECT * FROM Customer");
+                displayRentals = connection.prepareStatement("SELECT * FROM Rental");
+                calculateChargeFurniture = connection.prepareStatement("SELECT Name, ((Days * Rate) * 0.95) AS Charge FROM Rental WHERE RentalType LIKE 'Furniture'");
+                //calculateChargeElectronicComputer = connection.prepareStatement("SELECT Name, ((Days * Rate) * 1.15) AS Charge FROM Rental WHERE RentalType LIKE 'Electronic' AND EnumType LIKE 'COMPUTER'");
+                //calculateChargeElectronic = connection.prepareStatement("SELECT Name, (Days * Rate) AS Charge FROM Rental WHERE RentalType LIKE 'Electronic' AND EnumType NOT LIKE 'COMPUTER'");
+               // calculateChargeElectronic = connection.prepareStatement("SELECT Name FROM Rental");
+               // calculateChargeFurniture = connection.prepareStatement("SELECT Days, Rate, RentalType, EnumType FROM Rental WHERE Name = ?");
+                
+                
+            }
+            catch(SQLException sqle)
+            {
+                sqle.printStackTrace();
+            }
+        }
+
+        public void writeCustomerToDatabase()
+        {
+            try
+            {
+                connectToDatabase();
+
+                System.out.println("\n\n");
+                System.out.println( "Name" +  "\t\t" + "Street" + "\t\t\t" +  "City" + "\t\t" +  "State" + "\t\t" + "Zip Code" + "\t\t" + "Credit Card Number");
+
+                resultSet = displayCustomers.executeQuery();
+                while(resultSet.next())
+                {
+                    String name = resultSet.getString("Name"); 
+                    String street = resultSet.getString("Street"); 
+                    String city = resultSet.getString("City");
+                    String state = resultSet.getString("State"); 
+                    String zip = resultSet.getString("Zip");
+                    String creditcardnumber = resultSet.getString("CreditCardNumber");
+
+                    System.out.printf("%-10s %-30s %-15s %-15s %-14s \t %-18s \n", name , street , city , state , zip , creditcardnumber);
+                }
+            }
+            catch(SQLException sqle)
+            {
+                sqle.printStackTrace();
+            }
+            
+
+        }
+
+        public void writeRentalToDatabase()
+        {
+            try
+            {
+            connectToDatabase();
+
+            resultSet = displayRentals.executeQuery();
+
+            System.out.println("\n");
+            System.out.println("Name" + "\t" + "Number of Days" + "\t" + "Price Per Day" + "\t" + "Rental Type" + "\t" + "Enum Type");
+
+            while(resultSet.next())
+                {
+                    String name = resultSet.getString("Name");
+                    int numberofdays = resultSet.getInt("Days");
+                    Double priceperday = resultSet.getDouble("Rate");
+                    String rentalType = resultSet.getString("RentalType");
+                    String enumType = resultSet.getString("EnumType");
+
+                    System.out.println( name + "\t"+ numberofdays +"\t\t\t"+ priceperday +"\t"+ rentalType +"\t"+ enumType +"\t");
+                }
+
+            
+            }
+            catch(SQLException sqle)
+            {
+                sqle.printStackTrace();
+            }
+        }
+        
+
+        public void writeCustomerTable(String name, String street, String city, String state, String zip, String creditcardnumber)
+        {
+            try
+            {
+
+                connectToDatabase();
+
+
+
+                insertCustomer.setString(1,name);
+                insertCustomer.setString(2,street);
+                insertCustomer.setString(3,city);
+                insertCustomer.setString(4,state);
+                insertCustomer.setString(5,zip);
+                insertCustomer.setString(6,creditcardnumber);
+                res = insertCustomer.executeUpdate();
+                
+            }
+
+            catch(SQLException sqle)
+            {
+                sqle.printStackTrace();
+            }
+        }
+
+        public void writeRentalTable(String name,int numberofdays,Double priceperday,String rentalType,String enumType)
+        { 
+            try
+            {
+
+                connectToDatabase();
+
+
+
+                insertRental.setString(1,name);
+                insertRental.setString(2,rentalType);
+                insertRental.setString(3,enumType);
+                insertRental.setDouble(4,priceperday);
+                insertRental.setInt(5,numberofdays);
+                res = insertRental.executeUpdate();
+                
+            }
+
+            catch(SQLException sqle)
+            {
+                sqle.printStackTrace();
+            }
+        } 
+        
+  /*      public void calculateCharge()
+        {
+            try
+            {
+                connectToDatabase();
+                
+               resultSet = calculateChargeElectronic.executeQuery();
+                ArrayList<String> customerList = new ArrayList<>();
+
+                Double charge = 0.0;
+
+                while(resultSet.next())
+                {
+                    String Name = new String(resultSet.getString(1));
+                    customerList.add(Name);
+                }
+
+                resultSet = calculateChargeFurniture.executeQuery();
+                
+                while(resultSet.next())
+                {
+                    if(resultSet.getString(2) == "Furniture")
+                    {
+                        charge += (resultSet.getInt(5) * resultSet.getDouble(4))*0.95;
+                        
+                    }
+
+                    if(resultSet.getString(2) == "Electronic")
+                    {
+                        if(resultSet.getString(3) == "COMPUTER")
+                        {
+                            charge += (resultSet.getInt(5) * resultSet.getDouble(4))*1.15;
+                        }
+                        else
+                        {
+                            charge += resultSet.getInt(5) * resultSet.getDouble(4);
+                        }
+                    }
+
+                    return charge;
+                }
+               // return charge;
+               
+                
+
+                String message = null;
+
+                resultSet = calculateChargeFurniture.executeQuery();
+                Double charge = 0.0;
+                
+
+                while(resultSet.next())
+                {
+                    
+                    charge = resultSet.getDouble("Charge");
+                    String name = resultSet.getString("Name");
+                    //Double charge = resultSet.getDouble("Charge");
+
+                    
+                   message += String.format("%s $%.2f%n",name,charge);
+                    //message += String.format(name,charge);
+                }
+                
+                JFrame frame = new JFrame("Homework 2 calculation");
+                JOptionPane.showMessageDialog(frame, message, "Homework 2 related charge calculation", JOptionPane.INFORMATION_MESSAGE);    
+                
+                
+            }
+
+            catch(SQLException sqle)
+            {
+                sqle.printStackTrace();
+            }
+
+           // return null;
+        }
+        */
+        public String calculateCharge()
+    {    String msg = "";
+   
+        try
+        {
+            connectToDatabase();
+            double total = 0;
+           
+            statement = connection.createStatement();
+            ResultSet customerNames = statement.executeQuery("SELECT Name FROM Rental");
+           
+			ArrayList<String> nameList = new ArrayList<>();
+			ArrayList<Double> charegesList = new ArrayList<>();
+			ArrayList<String> lastList = new ArrayList<>();
+           
+            ResultSetMetaData customerNamesMeta = customerNames.getMetaData();
+            int numberOfNames = customerNamesMeta.getColumnCount();
+            while(customerNames.next())
+            {
+                for(int i=1;i<=numberOfNames;i++)
+                {
+                    nameList.add(customerNames.getString(i));
+                }
+            }
+           
+           
+            statement = connection.createStatement();
+            ResultSet noDuplicates = statement.executeQuery("SELECT Name FROM Customer");
+            ResultSetMetaData noDuplicatesMeta = noDuplicates.getMetaData();
+            int noDuplicatesInt = noDuplicatesMeta.getColumnCount();
+           
+ 
+           
+            while(noDuplicates.next())
+            {
+                for(int i=1;i<=noDuplicatesInt;i++)
+                {
+                    lastList.add(noDuplicates.getString(i));
+                }
+            }
+           
+           
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT CASE WHEN rentalType='Furniture' THEN (rate * days * .95) WHEN enumType='COMPUTER' THEN (rate*days*1.15) ELSE (rate*days) END AS Charge, Rental.Name FROM Rental");
+            metaData = resultSet.getMetaData();
+            numberOfColumns = metaData.getColumnCount();
+           
+            while(resultSet.next())
+            {
+                for(int i=1;i<=numberOfColumns;i++)
+                {
+                    double charge = 0;
+                    String n = "";
+                    switch(metaData.getColumnType(i))
+                    {
+                        case Types.DOUBLE:
+                            charge = resultSet.getDouble(i);
+                            charegesList.add(charge);
+                            break;
+                    }
+                }
+            }
+           
+            for(int i=0;i<lastList.size();i++)
+            {
+                for(int c=0;c<nameList.size();c++)
+                {
+                    if(nameList.get(c).equals(lastList.get(i)))
+                    {
+                        total += charegesList.get(c);
+                    }
+                }
+                msg += String.format("%s\t $%.2f\n", lastList.get(i),total);
+                total = 0;
+            }  
+			JOptionPane.showMessageDialog(null,msg); 
+        }
+        catch(SQLException sqle)
+        {
+            sqle.printStackTrace();
+        }
+       
+            return msg;
+       
+       
+    }
+    
+}

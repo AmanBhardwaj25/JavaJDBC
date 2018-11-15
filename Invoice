@@ -1,0 +1,5 @@
+//Aman Bhardwaj
+public interface Invoice
+{
+	public String printInvoice();
+}

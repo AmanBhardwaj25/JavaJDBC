@@ -1,0 +1,16 @@
+//Aman Bhardwaj
+
+import javax.swing.*;
+
+public class MavGUITest{
+
+public static void main(String args[])
+    {
+        MavGUI c = new MavGUI();
+        c.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        c.setLocationRelativeTo(null);
+        c.setSize(500,500);
+        c.setVisible(true);
+
+    }
+}

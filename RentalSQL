@@ -1,0 +1,41 @@
+--Aman Bhardwaj
+
+DROP TABLE Customer ;
+DROP TABLE Rental ;
+
+-- Create tables
+
+CREATE TABLE Customer(
+    CustomerID INT NOT NULL GENERATED ALWAYS AS IDENTITY,
+    Name    VARCHAR(25) NOT NULL,
+    Street  VARCHAR(25) NOT NULL,
+    City    VARCHAR(25) NOT NULL,
+    State   VARCHAR(25) NOT NULL,
+    Zip     VARCHAR(25) NOT NULL,
+    CreditCardNumber    VARCHAR(25) NOT NULL
+) ;
+
+CREATE TABLE Rental(
+    RentalID INT NOT NULL GENERATED ALWAYS AS IDENTITY,
+    Name    VARCHAR(25)    NOT NULL,
+    RentalType  VARCHAR(25) NOT NULL,
+    EnumType    VARCHAR(25) NOT NULL,
+    Rate    FLOAT NOT NULL,
+    Days    INTEGER NOT NULL
+);
+
+INSERT INTO Customer (Name, Street, City, State, Zip, CreditCardNumber) VALUES('Jones','123 Mitchell','Arlington','Texas','76019','1222-4567-3456-1111');
+
+INSERT INTO Customer (Name, Street, City, State, Zip, CreditCardNumber) VALUES('Smith','61 Bose Lane','Dallas','Texas','75000','6547-2341-5445-3456');
+
+INSERT INTO Customer (Name, Street, City, State, Zip, CreditCardNumber) VALUES('Willis','245 Monster Drive','Hurst','Texas','75050','4156-3456-1111-2222');
+
+INSERT INTO Rental (Name, RentalType, EnumType, Rate, Days) VALUES ('Jones','Furniture','COUCH',25.00,4);
+
+INSERT INTO Rental (Name, RentalType, EnumType, Rate, Days) VALUES ('Smith','Electronic','TV',35.50,14);
+
+INSERT INTO Rental (Name, RentalType, EnumType, Rate, Days) VALUES ('Willis','Furniture','BED',15.75,7);
+
+INSERT INTO Rental (Name, RentalType, EnumType, Rate, Days) VALUES ('Jones','Electronic','COMPUTER',30.00,5);
+
+INSERT INTO Rental (Name, RentalType, EnumType, Rate, Days) VALUES ('Smith','Electronic','COMPUTER',45.00,3);

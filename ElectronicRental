@@ -1,0 +1,47 @@
+//Aman Bhardwaj
+import java.io.Serializable;
+
+public class ElectronicRental extends Rental implements Serializable
+{
+	public enum ElectronicType{COMPUTER,TV};
+	private ElectronicType eType;
+	
+	public ElectronicRental()
+	{
+			super();
+	}
+	
+	public ElectronicRental(ElectronicType et, double p, int nd)
+	{
+			super(p,nd);
+			setEtype(et);
+	}
+	
+	public void setEtype(ElectronicType et)
+	{
+		eType = et;
+	}
+
+	public ElectronicType getEtype()
+	{
+		return eType;
+	}
+
+	public double calculateCharge()
+	{
+		if(eType == ElectronicType.COMPUTER)
+		{
+			return(getNumberOfDays() * getPricePerDay() * 1.15);
+		}
+		else
+		{
+			return((getNumberOfDays() * getPricePerDay()));
+		}
+	}
+
+	public String toString()
+	{
+		return(super.toString() + " electronic type" + eType);
+	}
+
+}
